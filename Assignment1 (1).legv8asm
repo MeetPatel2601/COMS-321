@@ -1,0 +1,154 @@
+//Meet Patel netid:- mjpatel@iastate.edu 
+// Anshuman  netid:- agarga@iastate.edu
+
+main:
+  ADDI X10, XZR, #512
+  ADD X11, XZR, XZR
+  B Fill
+ 
+ Fill:
+ B start_init
+start_init:
+  SUB X12, X10, XZR
+  CBZ X12, end_init
+  STUR X10, [X11, #0]
+  SUBI X10, X10, #1
+  ADDI X11, X11, #8
+  B start_init
+end_init:
+  ADD X0, XZR, XZR                 // Calling the methods
+  ADDI X1, XZR, #512
+  B InsSort
+  return_InsSort:
+  B done
+
+	
+
+ShiftRight:
+ADD X9, XZR, XZR //tempI = 0
+ADD X9, X9, X19 //I = P
+SUBI X9, X9, #1 //I = P-1
+LDUR X0, [SP, #8] //X0 = arr
+ShiftLoop: //for i =final-1 to pos
+SUBS X13, X9, X25  
+B.EQ ShiftDone //if final-1 == pos goto ShiftDone
+
+//addr[i+1] = addr[i] below 
+
+//addr[i+1]
+ADDI X9, X9, #1 // i+1
+LSL X11, X9, #3 //X11 = (i+1)*8
+ADD X11, X11, X0 //X11 = &addr[i+1]
+LDUR X12, [X11,#0] //X12 = addr[i]
+
+SUBI X9, X9, #1 // i-- 
+
+//addr[i]
+ADD X15, XZR, XZR //X15 =0
+LSL X15, X9, #3 //X15 = i*8
+ADD X15, X0, X15 //X15 = &addr[i] 
+
+
+LDUR X12, [X15,#0] //X12 = addr[i]
+
+STUR X12, [X11,#0] //&addr[i+1] = addr[i]
+
+SUBI X9, X9, #1 // i--
+B ShiftLoop //go back to top of for loop
+
+ShiftDone:
+ADDI X9, X9, #1 // i+1
+LSL X11, X9, #3 //X11 = (i+1)*8
+ADD X11, X11, X0 //X11 = &addr[i+1]
+LDUR X12, [X11,#0] //X12 = addr[i]
+
+
+SUBI X9, X9, #1 // i-- 
+
+//addr[i]
+ADD X15, XZR, XZR //X15 =0
+LSL X15, X9, #3 //X15 = i*8
+ADD X15, X0, X15 //X15 = &addr[i] 
+
+
+LDUR X12, [X15,#0] //X12 = addr[i]
+
+STUR X12, [X11,#0] //&addr[i+1] = addr[i]
+B return_ShiftRight //return
+
+FindSortedPos:
+
+ADD X23, XZR, XZR // i =0 (X23)
+SortedLoop:
+SUBS XZR, X20, X23  // (final-1) - pos
+B.EQ SortedReturn //if final - i = 0 goto SortedReturn
+
+//addr[i]
+ADD X14, XZR, XZR //X14 =0
+LSL X4, X23, #3	//X4 = i*8
+ADD X4, X0, X4	//X4 = &arr[i]
+LDUR X14, [X4,#0]	//X14 = arr[i]
+
+
+SUBS XZR, X14, X21
+B.GE SortedReturn
+
+ADDI X23, X23, #1 / i++
+B SortedLoop
+SortedReturn:
+B return_FindSortedPos //return i
+
+InsertSortedPos:
+//v = addr[pos]
+ADD X21, XZR, XZR //X21 =0
+LSL X9, X19, #3	//X9 = i*8
+ADD X9, X0, X9	//X9 = &arr[i]
+LDUR X21, [X9,#0]	//v (X21) = arr[i] 
+
+
+//p = FindSortedPos
+B FindSortedPos
+return_FindSortedPos:
+//P = X25
+ADD X25, X23, XZR
+
+//ShiftRight
+B ShiftRight
+return_ShiftRight:
+
+
+//addr[p] = v
+ADD X10, XZR, XZR //X10 =0
+ADD X10, X25, X0  //X10 = &arr[p]
+STUR X21,[X10, #0] //adrr[p] =v
+
+B return_InsSortedPos 
+
+InsSort:
+SUBI SP, SP, #24                 //making space on the stack
+STUR LR, [SP, #0]                //Putting the return register on sp space 0
+STUR X0, [SP, #8]                // arr
+STUR X1, [SP, #16]               // n (size)
+ADDI X19, XZR, #1                // i = 1
+SUBI X20, X1, #1                 //n (size)-1
+ADDI X20, X20, #1
+
+InsLoop:
+SUBS X9, X20, X19                // i - (n - 1)
+B.EQ end_insertion_loop
+
+B InsertSortedPos
+return_InsSortedPos:
+
+LDUR X1, [SP, #16]
+LDUR X0, [SP, #8]
+ADDI X19, X19, #1 / i++
+B InsLoop
+
+end_insertion_loop:
+LDUR LR, [SP, #0]
+ADDI SP, SP, #24
+B return_InsSort
+
+done:
+  DUMP
